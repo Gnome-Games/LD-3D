@@ -2,56 +2,92 @@ using StarterAssets;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Windows;
+using UnityEngine.SceneManagement;
+
+public enum PlayerState
+{
+    Idle = 0,
+    Walking = 1,
+    Running = 2
+}
 
 public class Player : MonoBehaviour
 {
 
     [Header("Player")]
-    [Tooltip("Move speed of the character in m/s")]
     public float MoveSpeed = 2.0f;
-
-    [Tooltip("How fast the character turns to face movement direction")]
-    [Range(0.0f, 0.3f)]
-    public float RotationSmoothTime = 0.12f;
-
-    [Tooltip("Acceleration and deceleration")]
+    [Range(0.0f, 0.3f)] public float RotationSmoothTime = 0.12f;
     public float SpeedChangeRate = 10.0f;
 
+    public PlayerState state = PlayerState.Idle;
+
+    [Space(10)]
+    public float JumpHeight = 1.2f;
+
+    [Space(10)]
+    public float JumpTimeout = 0.50f;
+    public float FallTimeout = 0.15f;
+
     [Header("Cinemachine")]
-    [Tooltip("The follow target set in the Cinemachine Virtual Camera that the camera will follow")]
     public GameObject CinemachineCameraTarget;
-
-    [Tooltip("How far in degrees can you move the camera up")]
     public float TopClamp = 70.0f;
-
-    [Tooltip("How far in degrees can you move the camera down")]
     public float BottomClamp = -30.0f;
 
-    [Tooltip("Additional degress to override the camera. Useful for fine tuning camera position when locked")]
-    public float CameraAngleOverride = 0.0f;
-
-    [Tooltip("For locking the camera position on all axis")]
-    public bool LockCameraPosition = false;
-
-    // cinemachine
     private float _cinemachineTargetYaw;
     private float _cinemachineTargetPitch;
 
-    // player
+    private float _speed;
     private float _animationBlend;
     private float _targetRotation = 0.0f;
     private float _rotationVelocity;
-    private float _verticalVelocity;
+
+    [Header("Bow")]
+    [SerializeField] private Transform nockPoint;
+    [SerializeField] private Transform tip02;
+    [SerializeField] private Transform tip01;
+    [SerializeField] private LineRenderer bowstringLine;
+
 
 #if ENABLE_INPUT_SYSTEM
     private PlayerInput _playerInput;
 #endif
+    private Animator _animator;
+    private Rigidbody _rb;
     private StarterAssetsInputs _input;
     private GameObject _mainCamera;
 
     private const float _threshold = 0.01f;
+    private bool _hasAnimator;
+    private GameObject canvas;
 
+    public Transform limb01;
+    public Transform limb02;
+
+    public Transform bowstringAnchorPoint;
+
+    public AnimationCurve bowReleaseCurve;
+
+    private Vector3 nockPointRestLocalPosition;
+    private Vector3 initialLimb01LocalEulerAngles;
+    private Vector3 initialLimb02LocalEulerAngles;
+
+    private IEnumerator bowAnimation;
+    private IEnumerator bowSheathAnimation;
+
+    [Header("ARROW")]
+    public GameObject arrowInHand;
+    public GameObject arrowToShoot;
+
+    private IEnumerator getArrowAnimation;
+
+    [Header("UNSHEATHE")]
+    public GameObject bowSheathed;
+    public GameObject bowInHand;
+
+    private bool canJump = true;
+    private bool isJumpCooldownRunning = false;
+
+    private int health = 3;
 
     private bool IsCurrentDeviceMouse
     {
@@ -60,22 +96,13 @@ public class Player : MonoBehaviour
 #if ENABLE_INPUT_SYSTEM
             return _playerInput.currentControlScheme == "KeyboardMouse";
 #else
-				return false;
+            return false;
 #endif
         }
     }
 
-
-    public int health = 3;
-
-    [SerializeField] private GameObject canvas;
-
-    [SerializeField] private Rigidbody rb;
-    private Animator animator;
-
     private void Awake()
     {
-        // get a reference to our main camera
         if (_mainCamera == null)
         {
             _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -86,75 +113,170 @@ public class Player : MonoBehaviour
     {
         _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
 
-        animator = GetComponent<Animator>();
+        _rb = GetComponent<Rigidbody>();
+        _rb.freezeRotation = true;
+
         _input = GetComponent<StarterAssetsInputs>();
 #if ENABLE_INPUT_SYSTEM
         _playerInput = GetComponent<PlayerInput>();
 #else
-			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
+        Debug.LogError("Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
 #endif
 
-        rb = GetComponent<Rigidbody>();
-
-        Cursor.lockState = CursorLockMode.Locked;
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        CameraRotation();  // 1. Tourner la caméra d'abord
-        Move();            // 2. Puis bouger le joueur selon la caméra
+        _hasAnimator = TryGetComponent(out _animator);
+
     }
 
-    private void CameraRotation()
+    private void LateUpdate()
     {
-        // If there is no input, return early
-        if (_input.look == Vector2.zero)
+        CameraRotation();
+        CreateBowstring();
+    }
+
+#if UNITY_EDITOR
+    //Places bowstring even in Edit mode
+    void OnValidate()
+    {
+        CreateBowstring();
+    }
+#endif 
+
+    void CreateBowstring()
+    {
+        if (!bowstringLine || !tip01 || !tip02 || !nockPoint)
         {
             return;
         }
 
-        // Get the mouse or right stick input for camera rotation
-        float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.fixedDeltaTime;
+        bowstringLine.positionCount = 3;
+        bowstringLine.SetPosition(0, tip01.position);
+        bowstringLine.SetPosition(1, nockPoint.position);
+        bowstringLine.SetPosition(2, tip02.position);
+    }
 
-        _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier;
-        _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier;
 
-        // Clamp the camera's pitch to prevent it from rotating too far up or down
-        _cinemachineTargetPitch = Mathf.Clamp(_cinemachineTargetPitch, BottomClamp, TopClamp);
+    private void FixedUpdate()
+    {
+        Move();
 
-        // Apply the rotation to the Cinemachine camera target
-        CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch, _cinemachineTargetYaw, 0.0f);
+        if (_input.jump && canJump)
+        {
+            canJump = false;
+            _rb.AddForce(Vector3.up * JumpHeight, ForceMode.Impulse);
+
+            // Start cooldown only once after jumping
+            if (!isJumpCooldownRunning)
+            {
+                StartCoroutine(JumpCooldown());
+            }
+        }
+
+        // Clamp horizontal velocity only (not vertical)
+        Vector3 horizontalVelocity = new Vector3(_rb.linearVelocity.x, 0f, _rb.linearVelocity.z);
+        horizontalVelocity = Vector3.ClampMagnitude(horizontalVelocity, MoveSpeed);
+        _rb.linearVelocity = new Vector3(horizontalVelocity.x, _rb.linearVelocity.y, horizontalVelocity.z);
+    }
+
+    private IEnumerator JumpCooldown()
+    {
+        isJumpCooldownRunning = true;
+        yield return new WaitForSeconds(0.4f);
+
+        while (!Physics.Raycast(transform.position, Vector3.down, 0.2f, LayerMask.GetMask("Default")))
+        {
+            yield return null; // Wait one frame
+        }
+
+        canJump = true;
+        isJumpCooldownRunning = false;
+    }
+
+    private void CameraRotation()
+    {
+        if (_input.look.sqrMagnitude >= _threshold)
+        {
+            float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
+
+            _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier;
+            _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier;
+        }
+
+        _cinemachineTargetYaw = ClampAngle(_cinemachineTargetYaw, float.MinValue, float.MaxValue);
+        _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
+
+        CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch,
+            _cinemachineTargetYaw, 0.0f);
     }
 
     private void Move()
     {
-        // Normalize input direction
+        float targetSpeed = MoveSpeed;
+        if (_input.move == Vector2.zero) targetSpeed = 0.0f;
+
+        float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
+
+        float targetSpeedWithInput = targetSpeed * inputMagnitude;
+
+        // Smoothly interpolate _speed towards target
+        _speed = Mathf.MoveTowards(_speed, targetSpeedWithInput, SpeedChangeRate * Time.deltaTime);
+
+        if (targetSpeed == 0.0f)
+            _speed = 0.0f;
+
         Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
 
-        if (inputDirection.magnitude >= _threshold)
+        if (_input.move != Vector2.zero)
         {
-            // Calculate target rotation based on camera direction
-            float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + _mainCamera.transform.eulerAngles.y;
-
-            // Smoothly rotate towards the target angle
-            _targetRotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _rotationVelocity, RotationSmoothTime);
-            transform.rotation = Quaternion.Euler(0, _targetRotation, 0);
-
-            // Move in the target direction
-            Vector3 moveDirection = Quaternion.Euler(0.0f, targetAngle, 0.0f) * Vector3.forward;
-            rb.MovePosition(rb.position + moveDirection.normalized * MoveSpeed * Time.fixedDeltaTime);
+            _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + _mainCamera.transform.eulerAngles.y;
+            float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity, RotationSmoothTime);
+            transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
         }
 
-        // Update animator
-        _animationBlend = _input.move.magnitude;
-        animator.SetFloat("Speed", _animationBlend);
+        Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+
+        Vector3 velocity = targetDirection.normalized * _speed;
+        velocity.y = _rb.linearVelocity.y; // preserve vertical velocity
+
+        _rb.linearVelocity = velocity;
+
+        Vector3 currentHorizontalVelocity = new Vector3(_rb.linearVelocity.x, 0.0f, _rb.linearVelocity.z);
+        float currentHorizontalSpeed = currentHorizontalVelocity.magnitude;
+
+        if (currentHorizontalSpeed > 5.0f)
+        {
+            state = PlayerState.Running;
+        }
+        else if (currentHorizontalSpeed > 0.1f)
+        {
+            state = PlayerState.Walking;
+        }
+        else
+        {
+            state = PlayerState.Idle;
+        }
+
+        if (_hasAnimator)
+        {
+            _animator.SetInteger("State", (int)state);
+        }
     }
 
+    private static float ClampAngle(float angle, float min, float max)
+    {
+        if (angle < -360f) angle += 360f;
+        if (angle > 360f) angle -= 360f;
+        return Mathf.Clamp(angle, min, max);
+    }
+    
     public void Damage()
     {
         health -= 1;
-        if(health <= 0)
+
+        if (health <= 0)
         {
             Die();
         }
@@ -162,13 +284,185 @@ public class Player : MonoBehaviour
 
     public void Die()
     {
-        canvas.SetActive(true);
+        if (canvas != null)
+            canvas.SetActive(true);
+
         StartCoroutine(DieCoroutine());
     }
 
     private IEnumerator DieCoroutine()
     {
         yield return new WaitForSeconds(2);
-        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
+
+    ///BOW PULL/RELEASE ANIMATION
+    public void LoadBow(float delay, float duration)
+    {
+        if (bowAnimation != null)
+        {
+            StopCoroutine(bowAnimation);
+            nockPoint.localPosition = nockPointRestLocalPosition;
+        }
+        bowAnimation = LoadBowCoroutine(delay, duration);
+        StartCoroutine(bowAnimation);
+    }
+    public void ShootArrow(float delay, float duration)
+    {
+        if (bowAnimation != null)
+        {
+            StopCoroutine(bowAnimation);
+            nockPoint.position = bowstringAnchorPoint.position;
+        }
+        bowAnimation = ShootArrowCoroutine(delay, duration);
+        StartCoroutine(bowAnimation);
+    }
+    public void CancelLoadBow(float delay, float cancelDuration)
+    {
+        if (bowAnimation != null)
+        {
+            StopCoroutine(bowAnimation);
+        }
+        bowAnimation = CancelLoadBowCoroutine(delay, cancelDuration);
+        StartCoroutine(bowAnimation);
+    }
+
+    private IEnumerator LoadBowCoroutine(float delay, float duration)
+    {
+        yield return new WaitForSeconds(delay);
+
+        Vector3 limb01LoadLocalEulerAngles =
+        new Vector3(initialLimb01LocalEulerAngles.x, initialLimb01LocalEulerAngles.y, initialLimb01LocalEulerAngles.z - 15f);
+        Vector3 limb02LoadLocalEulerAngles =
+        new Vector3(initialLimb02LocalEulerAngles.x, initialLimb02LocalEulerAngles.y, initialLimb02LocalEulerAngles.z - 15f);
+
+        nockPoint.localPosition = nockPointRestLocalPosition;
+
+        float t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime / duration;
+            limb01.localEulerAngles =
+            Vector3.Lerp(initialLimb01LocalEulerAngles, limb01LoadLocalEulerAngles, t);
+            limb02.localEulerAngles =
+            Vector3.Lerp(initialLimb02LocalEulerAngles, limb02LoadLocalEulerAngles, t);
+
+            nockPoint.position = Vector3.Lerp(nockPoint.position, bowstringAnchorPoint.position, t);
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator ShootArrowCoroutine(float delay, float duration)
+    {
+        yield return new WaitForSeconds(delay);
+
+        Vector3 limb01LoadLocalEulerAngles =
+        new Vector3(initialLimb01LocalEulerAngles.x, initialLimb01LocalEulerAngles.y, initialLimb01LocalEulerAngles.z - 15f);
+        Vector3 limb02LoadLocalEulerAngles =
+        new Vector3(initialLimb02LocalEulerAngles.x, initialLimb02LocalEulerAngles.y, initialLimb02LocalEulerAngles.z - 15f);
+
+        Vector3 initialNockRestLocalPosition = nockPoint.localPosition;
+
+        arrowInHand.SetActive(false);
+
+        Instantiate(arrowToShoot, bowstringAnchorPoint.position, bowstringAnchorPoint.rotation);
+
+        float t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime / duration;
+            limb01.localEulerAngles =
+            Vector3.LerpUnclamped(limb01LoadLocalEulerAngles, initialLimb01LocalEulerAngles, bowReleaseCurve.Evaluate(t));
+            limb02.localEulerAngles =
+            Vector3.LerpUnclamped(limb02LoadLocalEulerAngles, initialLimb02LocalEulerAngles, bowReleaseCurve.Evaluate(t));
+
+            nockPoint.localPosition = Vector3.LerpUnclamped(initialNockRestLocalPosition, nockPointRestLocalPosition, bowReleaseCurve.Evaluate(t));
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator CancelLoadBowCoroutine(float delay, float duration)
+    {
+        yield return new WaitForSeconds(delay);
+
+        Vector3 limb01LoadLocalEulerAngles =
+        new Vector3(initialLimb01LocalEulerAngles.x, initialLimb01LocalEulerAngles.y, initialLimb01LocalEulerAngles.z - 15f);
+        Vector3 limb02LoadLocalEulerAngles =
+        new Vector3(initialLimb02LocalEulerAngles.x, initialLimb02LocalEulerAngles.y, initialLimb02LocalEulerAngles.z - 15f);
+
+        Vector3 initialNockRestLocalPosition = nockPoint.localPosition;
+
+        float t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime / duration;
+            limb01.localEulerAngles =
+            Vector3.LerpUnclamped(limb01LoadLocalEulerAngles, initialLimb01LocalEulerAngles, t);
+            limb02.localEulerAngles =
+            Vector3.LerpUnclamped(limb02LoadLocalEulerAngles, initialLimb02LocalEulerAngles, t);
+
+            nockPoint.localPosition = Vector3.LerpUnclamped(initialNockRestLocalPosition, nockPointRestLocalPosition, t);
+
+            yield return null;
+        }
+    }
+
+    ///GET ARROW AFTER SHOOTING
+    public void GetArrow(float delay)
+    {
+        if (getArrowAnimation != null)
+        {
+            StopCoroutine(getArrowAnimation);
+        }
+        getArrowAnimation = GetArrowCoroutine(delay);
+        StartCoroutine(getArrowAnimation);
+    }
+
+    private IEnumerator GetArrowCoroutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        arrowInHand.SetActive(true);
+    }
+
+    ///BOW UNSHEATHE / SHEATHE
+    public void UnsheatheBow(float delay)
+    {
+        if (bowSheathAnimation != null)
+        {
+            StopCoroutine(bowSheathAnimation);
+        }
+        bowSheathAnimation = UnsheatheBowCoroutine(delay);
+        StartCoroutine(bowSheathAnimation);
+    }
+
+    private IEnumerator UnsheatheBowCoroutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        bowSheathed.SetActive(false);
+        bowInHand.SetActive(true);
+
+    }
+
+    public void SheatheBow(float delay)
+    {
+        if (bowSheathAnimation != null)
+        {
+            StopCoroutine(bowSheathAnimation);
+        }
+        bowSheathAnimation = SheatheBowCoroutine(delay);
+        StartCoroutine(bowSheathAnimation);
+    }
+
+    private IEnumerator SheatheBowCoroutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        bowSheathed.SetActive(true);
+        bowInHand.SetActive(false);
+    }
+
 }
