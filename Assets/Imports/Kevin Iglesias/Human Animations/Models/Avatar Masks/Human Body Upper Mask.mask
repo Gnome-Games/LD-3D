@@ -14,13 +14,13 @@ AvatarMask:
   - m_Path: HumanF_BodyMesh
     m_Weight: 0
   - m_Path: Rig
-    m_Weight: 1
+    m_Weight: 0
   - m_Path: Rig/B-root
-    m_Weight: 1
+    m_Weight: 0
   - m_Path: Rig/B-root/B-hips
-    m_Weight: 1
+    m_Weight: 0
   - m_Path: Rig/B-root/B-hips/B-spine
-    m_Weight: 1
+    m_Weight: 0
   - m_Path: Rig/B-root/B-hips/B-spine/B-chest
     m_Weight: 1
   - m_Path: Rig/B-root/B-hips/B-spine/B-chest/B-neck

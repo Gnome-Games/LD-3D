@@ -16,26 +16,29 @@ namespace KevinIglesias
         private float arrowLifetime = 2f;
         private Rigidbody rb;
 
+        [SerializeField] private LayerMask originLayer;
+
         void OnEnable()
         {
             Destroy(this.gameObject, arrowLifetime);
             rb = GetComponent<Rigidbody>();
-        }
-
-        void FixedUpdate()
-        {
-            rb.AddForce(transform.forward * arrowSpeed * Time.deltaTime, ForceMode.Force);
+            rb = GetComponent<Rigidbody>();
+            rb.linearVelocity = transform.forward * arrowSpeed;
+            Destroy(this.gameObject, arrowLifetime);
         }
 
         private void OnCollisionEnter(Collision collision)
         {
-            Destroy(this.gameObject);
-
-            if (collision.gameObject.layer == LayerMask.NameToLayer("Player"))
+            if (collision.gameObject.layer != originLayer.value)
             {
-                collision.transform.parent.GetComponent<Player>().Damage();
-            }
+                if (collision.gameObject.layer == LayerMask.NameToLayer("Player"))
+                    collision.transform.GetComponent<Player>().Damage();
 
+                else if(collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+                    collision.transform.GetComponent<EnnemyHealth>().Damage();
+
+                Destroy(this.gameObject);
+            }
         }
     }
 }

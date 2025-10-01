@@ -1,16 +1,8 @@
 fileFormatVersion: 2
-guid: 91283c87c50ab854fa7ee6356c799fe6
+guid: 6f863c92a67a3b9449415a30631b2236
 NativeFormatImporter:
   externalObjects: {}
-  mainObjectFileID: 9100000
+  mainObjectFileID: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 335880
-  packageName: Human Archer Animations FREE
-  packageVersion: 1.0
-  assetPath: Assets/Imports/Kevin Iglesias/Human Animations/Unity Demo Scenes/Human
-    Archer Animations/AnimatorControllers/HumanM@ArcherController.controller
-  uploadId: 794774

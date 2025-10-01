@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: -2287808134521093726}
   - component: {fileID: 211398574372383706}
   - component: {fileID: 874451832648277683}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HumanArcher_ArrowToShoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -48,7 +48,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0378be88552b4a4993d21dc69643498, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  arrowSpeed: 5000
+  arrowSpeed: 50
+  originLayer:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!136 &211398574372383706
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -109,7 +112,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8080520172707470241}
   - component: {fileID: 1366742610318559982}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: ArrowTrail
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -258,7 +261,7 @@ GameObject:
   - component: {fileID: 2560732536650677107}
   - component: {fileID: 629435879993804070}
   - component: {fileID: 8964845083528079686}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: ArrowMesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public enum PlayerState
 {
@@ -47,6 +48,8 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform tip01;
     [SerializeField] private LineRenderer bowstringLine;
 
+    [Header("UI")]
+    [SerializeField] private Slider healthbar;
 
 #if ENABLE_INPUT_SYSTEM
     private PlayerInput _playerInput;
@@ -58,7 +61,7 @@ public class Player : MonoBehaviour
 
     private const float _threshold = 0.01f;
     private bool _hasAnimator;
-    private GameObject canvas;
+    [SerializeField] private GameObject canvas;
 
     public Transform limb01;
     public Transform limb02;
@@ -74,13 +77,15 @@ public class Player : MonoBehaviour
     private IEnumerator bowAnimation;
     private IEnumerator bowSheathAnimation;
 
-    [Header("ARROW")]
+    [Header("Arrow")]
     public GameObject arrowInHand;
     public GameObject arrowToShoot;
 
     private IEnumerator getArrowAnimation;
 
-    [Header("UNSHEATHE")]
+    public GameObject crosshair;
+
+    [Header("Unseathe")]
     public GameObject bowSheathed;
     public GameObject bowInHand;
 
@@ -98,6 +103,20 @@ public class Player : MonoBehaviour
 #else
             return false;
 #endif
+        }
+    }
+
+    void OnEnable()
+    {
+        if (nockPoint)
+        {
+            nockPointRestLocalPosition = nockPoint.localPosition;
+        }
+
+        if (limb01 && limb02)
+        {
+            initialLimb01LocalEulerAngles = limb01.localEulerAngles;
+            initialLimb02LocalEulerAngles = limb02.localEulerAngles;
         }
     }
 
@@ -129,6 +148,7 @@ public class Player : MonoBehaviour
     {
         _hasAnimator = TryGetComponent(out _animator);
 
+        crosshair.SetActive(_input.aim);
     }
 
     private void LateUpdate()
@@ -157,7 +177,6 @@ public class Player : MonoBehaviour
         bowstringLine.SetPosition(1, nockPoint.position);
         bowstringLine.SetPosition(2, tip02.position);
     }
-
 
     private void FixedUpdate()
     {
@@ -214,6 +233,9 @@ public class Player : MonoBehaviour
 
     private void Move()
     {
+        if (!Physics.Raycast(transform.position, Vector3.down, 0.2f, LayerMask.GetMask("Default")))
+            return;
+
         float targetSpeed = MoveSpeed;
         if (_input.move == Vector2.zero) targetSpeed = 0.0f;
 
@@ -229,8 +251,12 @@ public class Player : MonoBehaviour
 
         Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
 
-        if (_input.move != Vector2.zero)
+        if (_input.move != Vector2.zero || _input.aim)
         {
+            if (_input.aim)
+            {
+                inputDirection = Vector3.zero;
+            }
             _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + _mainCamera.transform.eulerAngles.y;
             float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity, RotationSmoothTime);
             transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
@@ -241,7 +267,7 @@ public class Player : MonoBehaviour
         Vector3 velocity = targetDirection.normalized * _speed;
         velocity.y = _rb.linearVelocity.y; // preserve vertical velocity
 
-        _rb.linearVelocity = velocity;
+        _rb.linearVelocity = _input.aim ? new Vector3(0, _rb.linearVelocity.y, 0) : velocity;
 
         Vector3 currentHorizontalVelocity = new Vector3(_rb.linearVelocity.x, 0.0f, _rb.linearVelocity.z);
         float currentHorizontalSpeed = currentHorizontalVelocity.magnitude;
@@ -275,6 +301,8 @@ public class Player : MonoBehaviour
     public void Damage()
     {
         health -= 1;
+        healthbar.value = health;
+        healthbar.fillRect.GetComponent<Image>().color = health == 2 ? Color.yellow : Color.red;
 
         if (health <= 0)
         {
@@ -366,7 +394,8 @@ public class Player : MonoBehaviour
 
         arrowInHand.SetActive(false);
 
-        Instantiate(arrowToShoot, bowstringAnchorPoint.position, bowstringAnchorPoint.rotation);
+        Quaternion rotation = Quaternion.LookRotation(_mainCamera.transform.forward);
+        Instantiate(arrowToShoot, bowstringAnchorPoint.position, rotation);
 
         float t = 0;
         while (t < 1)

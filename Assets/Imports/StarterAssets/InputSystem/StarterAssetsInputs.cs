@@ -1,6 +1,8 @@
+using System.Collections;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 #endif
 
 namespace StarterAssets
@@ -12,6 +14,8 @@ namespace StarterAssets
 		public Vector2 look;
 		public bool jump;
 		public bool sprint;
+		public bool aim;
+		public bool shoot;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -20,8 +24,20 @@ namespace StarterAssets
 		public bool cursorLocked = true;
 		public bool cursorInputForLook = true;
 
+		private Player player;
+		private Animator animator;
+
+        private bool isShootCooldownRunning = false;
+
+
+        private void Start()
+        {
+            player = GetComponent<Player>();
+			animator = GetComponent<Animator>();
+		}
+
 #if ENABLE_INPUT_SYSTEM
-		public void OnMove(InputValue value)
+        public void OnMove(InputValue value)
 		{
 			MoveInput(value.Get<Vector2>());
 		}
@@ -43,10 +59,19 @@ namespace StarterAssets
 		{
 			SprintInput(value.isPressed);
 		}
+
+		public void OnAim(InputValue value)
+		{
+			if(Cursor.lockState == CursorLockMode.Locked)
+			{
+				AimInput(value.isPressed);
+			}
+        }
+
 #endif
 
 
-		public void MoveInput(Vector2 newMoveDirection)
+        public void MoveInput(Vector2 newMoveDirection)
 		{
 			move = newMoveDirection;
 		} 
@@ -66,7 +91,38 @@ namespace StarterAssets
 			sprint = newSprintState;
 		}
 
-		private void OnApplicationFocus(bool hasFocus)
+        public void AimInput(bool newAimState)
+		{
+			aim = newAimState;
+			if (aim)
+			{
+                player.GetArrow(0);
+                player.LoadBow(0, 0.2f);
+				animator.SetBool("Aiming", true);
+                animator.SetBool("Shoot", false);
+            }
+			else
+			{
+                player.CancelLoadBow(0, 0.2f);
+                animator.SetBool("Aiming", false);
+                animator.SetBool("Shoot", true);
+                if (!isShootCooldownRunning)
+                {
+                    StartCoroutine(ShootCooldown());
+                }
+            }
+        }
+
+        private IEnumerator ShootCooldown()
+        {
+            isShootCooldownRunning = true;
+            player.ShootArrow(0, 0.3f);
+            yield return new WaitForSeconds(0.4f);
+            isShootCooldownRunning = false;
+            player.CancelLoadBow(0, 0.3f);
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
 		{
 			SetCursorState(cursorLocked);
 		}

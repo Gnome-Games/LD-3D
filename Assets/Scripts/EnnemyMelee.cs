@@ -47,7 +47,7 @@ public class EnnemyMelee : MonoBehaviour
     private void FixedUpdate()
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, detectionRadius, detectionLayer);
-        if (hits.Length > 0 && hits[0] != null)
+        if (hits.Length > 0 && hits[0] != null && hits[0].tag == "Player")
         {
             agent.destination = hits[0].transform.position;
         }

@@ -28,10 +28,11 @@ public class EnnemyArcher : MonoBehaviour
         {
             Quaternion newRot = Quaternion.LookRotation(player.position - transform.position);
 
-            transform.rotation = newRot;
+            Vector3 eulerRotation = newRot.eulerAngles;
+            transform.rotation = Quaternion.Euler(0, eulerRotation.y, 0);
 
             animIdle = false;
-            animator.SetTrigger("ShootFast");
+            animator.SetTrigger("Shoot");
             animator.ResetTrigger("CancelShoot");
         }
         else
@@ -39,7 +40,7 @@ public class EnnemyArcher : MonoBehaviour
             if (!animIdle)
             {
                 animIdle = true;
-                animator.ResetTrigger("ShootFast");
+                animator.ResetTrigger("Shoot");
                 animator.SetTrigger("CancelShoot");
             }
         }
@@ -48,7 +49,7 @@ public class EnnemyArcher : MonoBehaviour
     private void FixedUpdate()
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, detectionRadius, detectionLayer);
-        if (hits.Length > 0 && hits[0] != null)
+        if (hits.Length > 0 && hits[0] != null && hits[0].tag == "Player")
         {
             player = hits[0].transform;
         }

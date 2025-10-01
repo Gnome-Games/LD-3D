@@ -1,5 +1,13 @@
 fileFormatVersion: 2
 guid: b978d1f8724f3c94197e41b0186b9c3e
+AssetOrigin:
+  serializedVersion: 1
+  productId: 335880
+  packageName: Human Archer Animations FREE
+  packageVersion: 1.0
+  assetPath: Assets/Kevin Iglesias/Human Animations/Animations/Male/Combat/Bow/HumanM@BowShot01
+    - Hold.fbx
+  uploadId: 794774
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -951,8 +959,7 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 2faa610713d3b3c439473daa55e8c60a,
-    type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 2faa610713d3b3c439473daa55e8c60a, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
   humanoidOversampling: 1
@@ -964,11 +971,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 335880
-  packageName: Human Archer Animations FREE
-  packageVersion: 1.0
-  assetPath: Assets/Kevin Iglesias/Human Animations/Animations/Male/Combat/Bow/HumanM@BowShot01
-    - Hold.fbx
-  uploadId: 794774
