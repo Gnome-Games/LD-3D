@@ -3115,7 +3115,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 10
   rotationSmoothTime: 0.12
-  speedChangeRate: 10
+  speedChangeRate: 500
   JumpHeight: 12
 --- !u!114 &7928860214475641926
 MonoBehaviour:
