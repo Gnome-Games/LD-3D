@@ -6,7 +6,15 @@ public class EnnemyHealth : MonoBehaviour
     public int m_Health = 3;
 
     public Slider healthbar;
-    
+
+    public void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Player") && collision.gameObject.tag == "Arrow")
+        {
+            Damage();
+        }
+    }
+
     public void Damage()
     {
         m_Health -= 1;

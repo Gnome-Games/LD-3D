@@ -10,13 +10,11 @@ using UnityEngine;
 
 namespace KevinIglesias
 {
-    public class HumanArcherArrow : MonoBehaviour
+    public class Arrow : MonoBehaviour
     {
         [SerializeField] private float arrowSpeed = 30f;
         private float arrowLifetime = 2f;
         private Rigidbody rb;
-
-        [SerializeField] private LayerMask originLayer;
 
         void OnEnable()
         {
@@ -29,16 +27,7 @@ namespace KevinIglesias
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (collision.gameObject.layer != originLayer.value)
-            {
-                if (collision.gameObject.layer == LayerMask.NameToLayer("Player"))
-                    collision.transform.GetComponent<Player>().Damage();
-
-                else if(collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
-                    collision.transform.GetComponent<EnnemyHealth>().Damage();
-
-                Destroy(this.gameObject);
-            }
+            Destroy(this.gameObject);
         }
     }
 }

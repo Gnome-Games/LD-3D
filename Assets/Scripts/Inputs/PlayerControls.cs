@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace StarterAssets
 {
-	public class StarterAssetsInputs : MonoBehaviour
+	public class PlayerControls : MonoBehaviour
 	{
 		[Header("Character Input Values")]
 		public Vector2 move;
@@ -15,7 +15,6 @@ namespace StarterAssets
 		public bool jump;
 		public bool sprint;
 		public bool aim;
-		public bool shoot;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -24,17 +23,39 @@ namespace StarterAssets
 		public bool cursorLocked = true;
 		public bool cursorInputForLook = true;
 
-		private Player player;
-		private Animator animator;
+		private PlayerMovement playerMovement;
+        private PlayerCombat playerCombat;
+        private Animator animator;
 
         private bool isShootCooldownRunning = false;
 
+#if ENABLE_INPUT_SYSTEM
+        private PlayerInput _playerInput;
+#endif
+        public bool IsCurrentDeviceMouse
+        {
+            get
+            {
+#if ENABLE_INPUT_SYSTEM
+                return _playerInput.currentControlScheme == "KeyboardMouse";
+#else
+            return false;
+#endif
+            }
+        }
 
         private void Start()
         {
-            player = GetComponent<Player>();
-			animator = GetComponent<Animator>();
-		}
+            playerMovement = GetComponent<PlayerMovement>();
+            playerCombat = GetComponent<PlayerCombat>();
+            animator = GetComponent<Animator>();
+
+#if ENABLE_INPUT_SYSTEM
+            _playerInput = GetComponent<PlayerInput>();
+#else
+        Debug.LogError("Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
+#endif
+        }
 
 #if ENABLE_INPUT_SYSTEM
         public void OnMove(InputValue value)
@@ -96,14 +117,14 @@ namespace StarterAssets
 			aim = newAimState;
 			if (aim)
 			{
-                player.GetArrow(0);
-                player.LoadBow(0, 0.2f);
+                playerCombat.GetArrow(0);
+                playerCombat.LoadBow(0, 0.2f);
 				animator.SetBool("Aiming", true);
                 animator.SetBool("Shoot", false);
             }
 			else
 			{
-                player.CancelLoadBow(0, 0.2f);
+                playerCombat.CancelLoadBow(0, 0.2f);
                 animator.SetBool("Aiming", false);
                 animator.SetBool("Shoot", true);
                 if (!isShootCooldownRunning)
@@ -116,10 +137,10 @@ namespace StarterAssets
         private IEnumerator ShootCooldown()
         {
             isShootCooldownRunning = true;
-            player.ShootArrow(0, 0.3f);
+            playerCombat.ShootArrow(0, 0.3f);
             yield return new WaitForSeconds(0.4f);
             isShootCooldownRunning = false;
-            player.CancelLoadBow(0, 0.3f);
+            playerCombat.CancelLoadBow(0, 0.3f);
         }
 
         private void OnApplicationFocus(bool hasFocus)

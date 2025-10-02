@@ -1,7 +1,7 @@
 using KevinIglesias;
 using UnityEngine;
 
-public class EnnemyArcher : MonoBehaviour
+public class EnnemyArcherMovement : MonoBehaviour
 {
     [SerializeField] private float detectionRadius = 10f;
     [SerializeField] private LayerMask detectionLayer;
