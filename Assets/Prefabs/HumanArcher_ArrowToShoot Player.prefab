@@ -68,8 +68,8 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.18
-  m_Height: 1
+  m_Radius: 0.3
+  m_Height: 1.24
   m_Direction: 2
   m_Center: {x: 0, y: 0, z: 0.48}
 --- !u!54 &874451832648277683
@@ -176,7 +176,7 @@ TrailRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Time: 0.1
+  m_Time: 0.4
   m_PreviewTimeScale: 1
   m_Parameters:
     serializedVersion: 3

@@ -451,7 +451,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4192902007633993818}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: EnnemyArcher
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1151,7 +1151,7 @@ GameObject:
   - component: {fileID: 7002355656153028347}
   - component: {fileID: 3785210642797681979}
   - component: {fileID: 6356757994032069956}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1378,7 +1378,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8773999376511513082}
   - component: {fileID: 3389922974149636845}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Slider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1849,7 +1849,7 @@ GameObject:
   - component: {fileID: 4952090287085820349}
   - component: {fileID: 469082641305805300}
   - component: {fileID: 4881222383910541406}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2565,6 +2565,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   archerAnimator: {fileID: 4216599225396912289}
+  bloodPrefab: {fileID: 2595204542525509919, guid: 000b0334d98c4e44bacc9605be6cedea, type: 3}
   animationToPlay: 1
   bowstringLine: {fileID: 8204768901140503158}
   limb01: {fileID: 3803660305926724721}
@@ -2631,7 +2632,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 018b52d9f77869d449692f30a7251f71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  detectionRadius: 4.38
+  detectionRadius: 6.37
   detectionLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -2649,6 +2650,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Health: 3
   healthbar: {fileID: 3389922974149636845}
+  bloodVFX: {fileID: 2595204542525509919, guid: 000b0334d98c4e44bacc9605be6cedea, type: 3}
 --- !u!136 &7671987022114543058
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -2683,7 +2685,7 @@ GameObject:
   - component: {fileID: 7974547855641560740}
   - component: {fileID: 5027371601052635127}
   - component: {fileID: 8572194919328517824}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3110,7 +3112,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9001363313494773613}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Fill Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}

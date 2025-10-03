@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class EnnemyArcherMovement : MonoBehaviour
 {
-    [SerializeField] private float detectionRadius = 10f;
+    [SerializeField] public float detectionRadius = 10f;
     [SerializeField] private LayerMask detectionLayer;
 
     private Transform player;
@@ -12,10 +12,9 @@ public class EnnemyArcherMovement : MonoBehaviour
 
     private HumanArcherController controller;
     private Animator animator;
+    private PlayerHealth playerHealth;
 
-    private 
-
-    void Start()
+    private void Start()
     {
         controller = GetComponent<HumanArcherController>();
         animator = GetComponent<Animator>();
@@ -24,7 +23,7 @@ public class EnnemyArcherMovement : MonoBehaviour
 
     void Update()
     {
-        if (player != transform && player != null)
+        if (player != transform && player != null && playerHealth != null && !playerHealth.IsDead())
         {
             Quaternion newRot = Quaternion.LookRotation(player.position - transform.position);
 
@@ -52,6 +51,7 @@ public class EnnemyArcherMovement : MonoBehaviour
         if (hits.Length > 0 && hits[0] != null && hits[0].tag == "Player")
         {
             player = hits[0].transform;
+            playerHealth = player.GetComponent<PlayerHealth>();
         }
         else
             player = transform;

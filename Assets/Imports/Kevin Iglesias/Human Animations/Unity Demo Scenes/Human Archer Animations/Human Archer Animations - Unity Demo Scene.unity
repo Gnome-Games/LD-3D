@@ -2060,6 +2060,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   archerAnimator: {fileID: 254880227}
+  bloodPrefab: {fileID: 0}
   animationToPlay: 9
   bowstringLine: {fileID: 1397682972}
   limb01: {fileID: 1397682968}
@@ -3408,6 +3409,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   archerAnimator: {fileID: 573063365}
+  bloodPrefab: {fileID: 0}
   animationToPlay: 1
   bowstringLine: {fileID: 1843309063}
   limb01: {fileID: 1843309059}
@@ -3610,6 +3612,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   archerAnimator: {fileID: 602709506}
+  bloodPrefab: {fileID: 0}
   animationToPlay: 7
   bowstringLine: {fileID: 1834845906}
   limb01: {fileID: 1834845902}
@@ -6626,6 +6629,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   archerAnimator: {fileID: 1177217010}
+  bloodPrefab: {fileID: 0}
   animationToPlay: 14
   bowstringLine: {fileID: 136007025}
   limb01: {fileID: 1328124538}
@@ -6833,6 +6837,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   archerAnimator: {fileID: 1185454134}
+  bloodPrefab: {fileID: 0}
   animationToPlay: 5
   bowstringLine: {fileID: 787937344}
   limb01: {fileID: 787937340}
@@ -8526,6 +8531,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   archerAnimator: {fileID: 1471313500}
+  bloodPrefab: {fileID: 0}
   animationToPlay: 8
   bowstringLine: {fileID: 318596398}
   limb01: {fileID: 318596394}
@@ -9008,6 +9014,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   archerAnimator: {fileID: 1569497458}
+  bloodPrefab: {fileID: 0}
   animationToPlay: 6
   bowstringLine: {fileID: 151866979}
   limb01: {fileID: 151866975}
@@ -9794,6 +9801,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   archerAnimator: {fileID: 1647233032}
+  bloodPrefab: {fileID: 0}
   animationToPlay: 2
   bowstringLine: {fileID: 2095631036}
   limb01: {fileID: 2095631032}

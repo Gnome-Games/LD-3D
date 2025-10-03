@@ -12,7 +12,7 @@ namespace KevinIglesias
 {
     public class Arrow : MonoBehaviour
     {
-        [SerializeField] private float arrowSpeed = 30f;
+        [SerializeField] private float arrowSpeed = 300f;
         private float arrowLifetime = 2f;
         private Rigidbody rb;
 
@@ -27,7 +27,8 @@ namespace KevinIglesias
 
         private void OnCollisionEnter(Collision collision)
         {
-            Destroy(this.gameObject);
+            if(collision.gameObject.layer != gameObject.layer)
+                Destroy(this.gameObject);
         }
     }
 }

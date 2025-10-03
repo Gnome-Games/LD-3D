@@ -36,14 +36,14 @@ public class PlayerCombat : MonoBehaviour
 
 
     private PlayerControls controls;
-    private GameObject mainCamera;
+    private Camera mainCamera;
 
 
     private void Awake()
     {
         if (mainCamera == null)
         {
-            mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
+            mainCamera = Camera.main;
         }
     }
 
@@ -169,7 +169,24 @@ public class PlayerCombat : MonoBehaviour
 
         arrowInHand.SetActive(false);
 
-        Quaternion rotation = Quaternion.LookRotation(mainCamera.transform.forward);
+        // Ray from center of screen
+        Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        Vector3 targetPoint;
+
+        if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
+        {
+            targetPoint = hit.point;
+        }
+        else
+        {
+            targetPoint = ray.GetPoint(1000f); // Arbitrary distant point
+        }
+
+        // Direction from bow to target point
+        Vector3 shootDirection = (targetPoint - bowStringAnchorPoint.position).normalized;
+        Quaternion rotation = Quaternion.LookRotation(shootDirection);
+
+        // Instantiate arrow
         Instantiate(arrowToShoot, bowStringAnchorPoint.position, rotation);
 
         float t = 0;

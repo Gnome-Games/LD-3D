@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,10 +8,17 @@ public class EnnemyHealth : MonoBehaviour
 
     public Slider healthbar;
 
+    public GameObject bloodVFX;
+
     public void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Player") && collision.gameObject.tag == "Arrow")
         {
+            Vector3 arrowRot = collision.gameObject.transform.rotation.eulerAngles;
+
+            arrowRot.y += 180;
+
+            Instantiate(bloodVFX, collision.contacts[0].point, Quaternion.Euler(arrowRot));
             Damage();
         }
     }
@@ -23,7 +31,14 @@ public class EnnemyHealth : MonoBehaviour
 
         if (m_Health <= 0)
         {
-            Destroy(transform.parent.gameObject);
+            healthbar.gameObject.SetActive(false);
+            StartCoroutine(Die());
         }
+    }
+
+    private IEnumerator Die()
+    {
+        yield return new WaitForSeconds(0.8f);
+        Destroy(transform.parent.gameObject);
     }
 }

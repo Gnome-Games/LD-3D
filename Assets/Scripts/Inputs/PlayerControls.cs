@@ -118,7 +118,7 @@ namespace StarterAssets
 			if (aim)
 			{
                 playerCombat.GetArrow(0);
-                playerCombat.LoadBow(0, 0.2f);
+                playerCombat.LoadBow(0.5f, 0.2f);
 				animator.SetBool("Aiming", true);
                 animator.SetBool("Shoot", false);
             }

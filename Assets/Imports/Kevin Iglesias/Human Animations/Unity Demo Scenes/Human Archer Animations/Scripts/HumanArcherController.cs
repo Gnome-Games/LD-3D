@@ -32,6 +32,8 @@ namespace KevinIglesias
     public class HumanArcherController : MonoBehaviour
     {
         public Animator archerAnimator;
+
+        public GameObject bloodPrefab;
         
         [Header("ANIMATION TO PLAY")]
         public ArcherAnimation animationToPlay;
@@ -66,6 +68,8 @@ namespace KevinIglesias
         [Header("UNSHEATHE")]
         public GameObject bowSheathed;
         public GameObject bowInHand;
+
+        private EnnemyArcherMovement ennemyArcherMovement;
         
         //Initialize values
         void OnEnable()
@@ -80,6 +84,8 @@ namespace KevinIglesias
                 initialLimb01LocalEulerAngles = limb01.localEulerAngles;
                 initialLimb02LocalEulerAngles = limb02.localEulerAngles;
             }
+
+            ennemyArcherMovement = GetComponent<EnnemyArcherMovement>();
         }
         
         void Update()
@@ -184,7 +190,17 @@ namespace KevinIglesias
             
             arrowInHand.SetActive(false);
 
-            Instantiate(arrowToShoot, bowstringAnchorPoint.position, bowstringAnchorPoint.rotation);
+            GameObject arrow = Instantiate(arrowToShoot, bowstringAnchorPoint.position, bowstringAnchorPoint.rotation);
+
+            
+            if (Physics.Raycast(arrow.transform.position, transform.forward, out RaycastHit hitInfo, ennemyArcherMovement.detectionRadius))
+            {
+                if(hitInfo.collider.gameObject.layer == LayerMask.NameToLayer("Player") && hitInfo.collider.gameObject.tag == "Player")
+                {
+                    hitInfo.collider.gameObject.GetComponent<PlayerHealth>().Damage();
+                    Instantiate(bloodPrefab, hitInfo.point, Quaternion.identity);
+                }
+            }
 
             float t = 0;
             while(t < 1)
